@@ -1,0 +1,37 @@
+# Ignore data directory (contains large RNA-seq count files)
+data/
+
+# Ignore R-specific files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Ignore temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore R package build files
+*.tar.gz
+*.zip
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore system files
+Icon?
