@@ -76,27 +76,40 @@ Experiment 7 includes a unique **interactive gene selection** feature:
 
 ### 🎯 **How to Use**
 1. Select "**Experiment 7**" from the dropdown
-2. Enter a gene symbol in the **Gene Name** text box (e.g., `DMD`, `ACTA1`, `MYH7`)
+2. Enter a **gene symbol** (e.g., `DMD`, `ACTA1`) **OR** an **Ensembl ID** (e.g., `ENSG00000198947`) in the **Gene Name** text box
 3. Press Enter or click elsewhere to update the plot
 4. The gene expression plot updates instantly with your selected gene
 
 ### 🔍 **Gene Search Method**
-The app uses a comprehensive genes reference database (86,402 entries) to find your gene:
+The app supports **both gene symbols and Ensembl IDs** using a comprehensive genes reference database (86,402 entries):
 
-1. **Gene Symbol Lookup**: Uses `genes$external_gene_name` to find the corresponding Ensembl ID
+#### **For Gene Symbols (e.g., `DMD`, `TTR`)**
+1. **Direct Lookup**: Uses `genes$external_gene_name` to find the corresponding Ensembl ID
 2. **Count Matrix Search**: Searches count matrix row names using `startsWith()` with the Ensembl ID prefix
 3. **Exact Matching**: Finds genes where row names start with the correct Ensembl ID
-4. **Fallback**: If gene not found in reference, shows the most highly expressed gene with a warning
 
-**Supported Gene Examples**: Any gene symbol in the reference database (e.g., `DMD`, `TTR`, `ACTA1`, `MYH7`, `GAPDH`)
+#### **For Ensembl IDs (e.g., `ENSG00000198947`)**
+1. **ID Detection**: Automatically detects Ensembl IDs (starting with "ENSG")
+2. **Gene Name Lookup**: Uses `genes$ensembl_gene_id` to find the corresponding gene symbol
+3. **Count Matrix Search**: Proceeds with normal search using the mapped gene symbol
+
+#### **Fallback Strategy**
+If gene not found in reference, shows the most highly expressed gene with a warning
 
 ### ✨ **Examples**
-Try these genes (or any gene symbol from the reference database):
+
+#### **Gene Symbols** (any gene from the reference database):
 - **`DMD`**: Duchenne muscular dystrophy gene (default)
 - **`TTR`**: Transthyretin 
 - **`ACTA1`**: Skeletal muscle alpha-actin
 - **`MYH7`**: Cardiac/skeletal muscle myosin
 - **`GAPDH`**: Housekeeping gene control
+
+#### **Ensembl IDs** (automatically detected):
+- **`ENSG00000198947`**: DMD (Duchenne muscular dystrophy)
+- **`ENSG00000132664`**: TTR (Transthyretin)
+- **`ENSG00000143632`**: ACTA1 (Skeletal muscle alpha-actin)
+- **`ENSG00000092054`**: MYH7 (Cardiac/skeletal muscle myosin)
 
 ## ✏️ **Customizing Individual Experiments**
 
