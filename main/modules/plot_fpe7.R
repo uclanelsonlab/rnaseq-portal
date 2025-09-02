@@ -3,7 +3,8 @@
 # ===================================================================================================
 # This module contains the plot generation function for Fibroblast Priming Experiment #7
 # Shows PCA plot and interactive gene expression plot with user-selectable genes
-# Uses genes reference database for gene symbol to Ensembl ID mapping
+# Supports both gene symbols (e.g., 'DMD') and Ensembl IDs (e.g., 'ENSG00000198947')
+# Uses genes reference database for bidirectional gene symbol ↔ Ensembl ID mapping
 
 generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD", genes = NULL) {
   tryCatch({
@@ -85,9 +86,9 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
     ### GENE COUNT PLOT ####################################################################
     #########################################################################################
     
-    # Find gene using the specified approach
-    gene.name <- gene_name
-    cat(paste("  Searching for gene:", gene.name, "\n"))
+    # Handle both gene names and Ensembl gene IDs
+    user_input <- gene_name
+    cat(paste("  Searching for gene:", user_input, "\n"))
     
     # Check if genes reference is available
     if(is.null(genes)) {
@@ -96,27 +97,53 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
       gene_means <- rowMeans(fpe7_counts)
       selected_gene <- names(sort(gene_means, decreasing = TRUE))[1]
       gene <- which(rownames(cts) == selected_gene)
-      display_name <- paste(gene.name, "(genes reference unavailable - showing top gene)")
+      display_name <- paste(user_input, "(genes reference unavailable - showing top gene)")
     } else {
-      # Find the gene using the genes mapping
-      gene <- which(startsWith(
-        x = rownames(cts), 
-        prefix = genes$ensembl_gene_id[genes$external_gene_name == gene.name]))
-      
-      if(length(gene) > 0) {
-        # Use the first match if multiple found
-        gene <- gene[1]  # Use first index
-        selected_gene <- rownames(cts)[gene]
-        cat(paste("  ✓ Found gene:", selected_gene, "\n"))
-        display_name <- gene.name
+      # Check if input looks like an Ensembl gene ID (starts with ENSG)
+      if(grepl("^ENSG", user_input, ignore.case = TRUE)) {
+        # Input is an Ensembl gene ID - look up the corresponding gene name
+        ensembl.gene.id <- user_input
+        gene.name <- genes$external_gene_name[genes$ensembl_gene_id == ensembl.gene.id]
+        
+        if(length(gene.name) > 0 && !is.na(gene.name[1]) && gene.name[1] != "") {
+          gene.name <- gene.name[1]  # Use first match
+          cat(paste("  ✓ Ensembl ID", ensembl.gene.id, "maps to gene:", gene.name, "\n"))
+        } else {
+          cat(paste("  ⚠️ Ensembl ID", ensembl.gene.id, "not found in genes reference\n"))
+          gene.name <- NULL
+        }
       } else {
-        # Fallback: use the most highly expressed gene in FPE7
-        cat(paste("  ⚠️ Gene", gene.name, "not found in genes reference, using most highly expressed gene\n"))
+        # Input is a gene name - use directly
+        gene.name <- user_input
+      }
+      
+      # Find the gene using the genes mapping (if we have a valid gene name)
+      if(!is.null(gene.name)) {
+        gene <- which(startsWith(
+          x = rownames(cts), 
+          prefix = genes$ensembl_gene_id[genes$external_gene_name == gene.name]))
+        
+        if(length(gene) > 0) {
+          # Use the first match if multiple found
+          gene <- gene[1]  # Use first index
+          selected_gene <- rownames(cts)[gene]
+          cat(paste("  ✓ Found gene in count matrix:", selected_gene, "\n"))
+          display_name <- gene.name
+        } else {
+          gene <- NULL
+        }
+      } else {
+        gene <- NULL
+      }
+      
+      # Fallback if gene not found
+      if(is.null(gene) || length(gene) == 0) {
+        cat(paste("  ⚠️ Gene", user_input, "not found, using most highly expressed gene\n"))
         fpe7_counts <- cts[, selected.samples]
         gene_means <- rowMeans(fpe7_counts)
         selected_gene <- names(sort(gene_means, decreasing = TRUE))[1]
         gene <- which(rownames(cts) == selected_gene)
-        display_name <- paste(gene.name, "(not found - showing top gene)")
+        display_name <- paste(user_input, "(not found - showing top gene)")
       }
     }
     

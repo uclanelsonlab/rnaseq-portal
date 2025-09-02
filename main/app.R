@@ -205,14 +205,14 @@ ui <- fluidPage(
         condition = "input.experiment == 'fpe7'",
         hr(),
         h4("Gene Selection"),
-        textInput("gene_name", 
-                  "Gene Name:", 
-                  value = "DMD",
-                  placeholder = "Enter gene symbol (e.g., DMD, ACTA1)"),
-        p(style = "font-size: 11px; color: #666;", 
-          "Enter a gene symbol to display its expression across treatments."),
-        p(style = "font-size: 11px; color: #666;", 
-          "If gene not found, the most highly expressed gene will be shown.")
+              textInput("gene_name", 
+                "Gene Name:", 
+                value = "DMD",
+                placeholder = "Enter gene symbol (e.g., DMD, TTR) or Ensembl ID (e.g., ENSG00000198947)"),
+      p(style = "font-size: 11px; color: #666;", 
+        "Enter a gene symbol OR Ensembl ID to display its expression across treatments."),
+      p(style = "font-size: 11px; color: #666;", 
+        "If gene not found, the most highly expressed gene will be shown.")
       ),
       
       hr(),
