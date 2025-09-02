@@ -17,14 +17,16 @@ R -e "shiny::runApp('app.R')"
 - **Interactive Plot Selection**: Switch between different experiment views with a dropdown
 - **All Experiments Overview**: Shows all samples colored by experiment number  
 - **Individual Experiments**: Dedicated visualizations for Experiments 4, 5, 6, and 7
+- **Interactive Gene Selection**: Enter custom gene names for FPE7 gene expression plots
 - **Modular Code Structure**: Easy customization of individual experiment plots
 - **Real-time Updates**: Plots change instantly when selections are made
+- **Intelligent Gene Search**: Automatic gene matching with fallback to most expressed genes
 
 ## 📋 **Required R Packages**
 
 ### CRAN packages:
 ```r
-install.packages(c("shiny", "ggplot2", "foreach", "doMC"))
+install.packages(c("shiny", "ggplot2", "foreach", "doMC", "gridExtra"))
 ```
 
 ### Bioconductor packages:
@@ -66,7 +68,35 @@ CCRD-RNAseq-portal/
 | **Experiment 4** | FPE4 samples only | Source | Treatment | Focus on treatment effects |
 | **Experiment 5** | FPE5 samples only | Sub-treatment | Co-treatment | Black highlighting for 'none' |
 | **Experiment 6** | FPE6 samples only | Sub-treatment | TNFα status | Black highlighting for 'none' |  
-| **Experiment 7** | FPE7 samples only | Participant ID | Treatment | Black outline for affected samples |
+| **Experiment 7** | FPE7 PCA + Gene Count | Participant ID | Treatment | Combined: PCA plot + Interactive gene expression |
+
+## 🧬 **Interactive Gene Selection (Experiment 7)**
+
+Experiment 7 includes a unique **interactive gene selection** feature:
+
+### 🎯 **How to Use**
+1. Select "**Experiment 7**" from the dropdown
+2. Enter a gene symbol in the **Gene Name** text box (e.g., `DMD`, `ACTA1`, `MYH7`)
+3. Press Enter or click elsewhere to update the plot
+4. The gene expression plot updates instantly with your selected gene
+
+### 🔍 **Gene Search Method**
+The app uses a comprehensive genes reference database (86,402 entries) to find your gene:
+
+1. **Gene Symbol Lookup**: Uses `genes$external_gene_name` to find the corresponding Ensembl ID
+2. **Count Matrix Search**: Searches count matrix row names using `startsWith()` with the Ensembl ID prefix
+3. **Exact Matching**: Finds genes where row names start with the correct Ensembl ID
+4. **Fallback**: If gene not found in reference, shows the most highly expressed gene with a warning
+
+**Supported Gene Examples**: Any gene symbol in the reference database (e.g., `DMD`, `TTR`, `ACTA1`, `MYH7`, `GAPDH`)
+
+### ✨ **Examples**
+Try these genes (or any gene symbol from the reference database):
+- **`DMD`**: Duchenne muscular dystrophy gene (default)
+- **`TTR`**: Transthyretin 
+- **`ACTA1`**: Skeletal muscle alpha-actin
+- **`MYH7`**: Cardiac/skeletal muscle myosin
+- **`GAPDH`**: Housekeeping gene control
 
 ## ✏️ **Customizing Individual Experiments**
 
@@ -247,8 +277,36 @@ ggsave("experiment4_plot.png", plot, width = 8, height = 6, dpi = 300)
 
 - **Data Loading**: Count matrix (62,757 genes × 231 samples) loads once at startup
 - **Plot Generation**: PCA calculations performed on-demand when switching experiments  
-- **Memory Usage**: ~200MB RAM for typical dataset size
-- **Load Time**: ~30-60 seconds initial startup, <5 seconds plot switching
+- **FPE7 Optimization**: Pre-computed DESeq analysis loaded at startup for instant plot generation
+- **Memory Usage**: ~250MB RAM for typical dataset size (includes pre-computed results)
+- **Load Time**: ~30-60 seconds initial startup, <2 seconds plot switching (FPE7 now instant!)
+
+### 🚀 **FPE7 Speed Optimization**
+
+Experiment 7 uses pre-computed DESeq2 results for lightning-fast plot generation:
+
+- **Pre-computed**: DESeq analysis runs once offline (~4 minutes) 
+- **Runtime**: Plot generation now takes <2 seconds instead of 3-4 minutes
+- **Auto-loading**: Pre-computed results loaded automatically at app startup
+
+### 🔄 **Regenerating Pre-computed Results**
+
+If you update your data, regenerate the pre-computed DESeq analysis:
+
+```bash
+# Navigate to scripts directory
+cd scripts/
+
+# Run pre-computation (takes ~4 minutes)
+Rscript precompute_fpe7_deseq.R
+
+# Restart your Shiny app to use new results
+```
+
+**When to regenerate:**
+- After adding/removing FPE7 samples
+- After updating count data or metadata
+- When changing DESeq2 analysis parameters
 
 ## 📞 **Support**
 
