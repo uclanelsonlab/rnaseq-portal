@@ -208,8 +208,7 @@ generate_fpe8_plot <- function(cts, coldata) {
   }, error = function(e) {
     # Error handling
     ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
-      geom_text(label = paste("Error in FPE8 plot:", e$message), color = "red") +
-      theme_void()
+      geom_text(label = paste("Error in FPE8 plot:", e$message), color = "red")
   })
 }
 ```
