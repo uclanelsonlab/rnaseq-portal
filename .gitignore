@@ -1,4 +1,4 @@
-# Ignore data directory (contains large RNA-seq count files)
+# Ignore data directory (contains large RNA-seq count files and pre-computed results)
 data/
 
 # Ignore R-specific files
