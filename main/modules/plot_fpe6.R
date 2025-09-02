@@ -46,6 +46,9 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
       ggtitle(label = 'Fibroblast Priming #6') +
       theme_minimal() +
       theme(
+        panel.background = element_rect(fill = "gray95", color = NA),
+        panel.grid.major = element_line(color = "white", size = 0.5),
+        panel.grid.minor = element_line(color = "white", size = 0.25),
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 9),
         plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
@@ -60,7 +63,8 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
     ggplot(data.frame(x = 1, y = 1), aes(x, y)) +
       geom_text(label = paste("Error in FPE6 plot:", e$message), 
                 size = 4, color = "red") +
-      theme_void() +
+      theme_minimal() +
+      theme(panel.background = element_rect(fill = "gray95", color = NA)) +
       labs(title = "Plot Generation Error")
   })
 }

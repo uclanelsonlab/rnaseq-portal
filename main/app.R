@@ -290,7 +290,8 @@ server <- function(input, output) {
         theme_minimal() +
         labs(title = "Plot Generation Error", 
              subtitle = "Check R console for details") +
-        theme(axis.text = element_blank(),
+        theme(panel.background = element_rect(fill = "gray95", color = NA),
+              axis.text = element_blank(),
               axis.ticks = element_blank())
     })
   })
