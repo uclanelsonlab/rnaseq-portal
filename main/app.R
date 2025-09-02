@@ -8,6 +8,7 @@ library(DESeq2)
 library(foreach)
 library(doMC)
 library(ggplot2)
+library(gridExtra)
 
 # Note: Parallel processing removed for Shiny app stability
 
@@ -105,6 +106,51 @@ tryCatch({
   stop("Failed to process metadata")
 })
 
+# Load pre-computed FPE7 DESeq object for faster plot generation
+tryCatch({
+  cat("Loading pre-computed FPE7 DESeq analysis...\n")
+  fpe7_deseq_file <- '../data/fpe7_deseq_precomputed.rds'
+  
+  if(file.exists(fpe7_deseq_file)) {
+    fpe7_dds <- readRDS(fpe7_deseq_file)
+    
+    # Load analysis info
+    info_file <- '../data/fpe7_deseq_info.rds'
+    if(file.exists(info_file)) {
+      fpe7_info <- readRDS(info_file)
+      cat(paste("✓ Pre-computed FPE7 DESeq loaded (", fpe7_info$sample_count, "samples,", 
+                fpe7_info$gene_count, "genes)\n"))
+      cat(paste("  Analysis created:", fpe7_info$creation_date, "\n"))
+    } else {
+      cat("✓ Pre-computed FPE7 DESeq loaded\n")
+    }
+  } else {
+    cat("⚠️  Pre-computed FPE7 DESeq not found - will run analysis on-demand (slower)\n")
+    cat("   Run 'Rscript ../scripts/precompute_fpe7_deseq.R' to generate it\n")
+    fpe7_dds <- NULL
+  }
+}, error = function(e) {
+  cat(paste("⚠️  Error loading pre-computed FPE7 DESeq:", e$message, "\n"))
+  cat("   Will fall back to on-demand analysis (slower)\n")
+  fpe7_dds <- NULL
+})
+
+# Load genes reference data for FPE7 gene mapping
+tryCatch({
+  cat("Loading genes reference data...\n")
+  genes_file <- '../data/2025-03-19_genes.rds'
+  if(file.exists(genes_file)) {
+    genes <- readRDS(genes_file)
+    cat(paste("✓ Genes reference loaded with", nrow(genes), "entries\n"))
+  } else {
+    cat("⚠️  Genes reference file not found - FPE7 gene search may be limited\n")
+    genes <- NULL
+  }
+}, error = function(e) {
+  cat(paste("⚠️  Error loading genes reference:", e$message, "\n"))
+  genes <- NULL
+})
+
 # Confirm data loading is complete
 cat("✓ All data loaded successfully! Shiny app is ready.\n")
 cat(paste("Available FPE numbers:", paste(unique(coldata$FPE.num), collapse=", "), "\n"))
@@ -153,10 +199,27 @@ ui <- fluidPage(
                     "Experiment 7" = "fpe7"
                   ),
                   selected = "all"),
+      
+      # Conditional gene input for FPE7
+      conditionalPanel(
+        condition = "input.experiment == 'fpe7'",
+        hr(),
+        h4("Gene Selection"),
+        textInput("gene_name", 
+                  "Gene Name:", 
+                  value = "DMD",
+                  placeholder = "Enter gene symbol (e.g., DMD, ACTA1)"),
+        p(style = "font-size: 11px; color: #666;", 
+          "Enter a gene symbol to display its expression across treatments."),
+        p(style = "font-size: 11px; color: #666;", 
+          "If gene not found, the most highly expressed gene will be shown.")
+      ),
+      
       hr(),
       p("Select different experiments to view their respective PCA plots."),
       p(strong("All Experiments:"), "Overview of all data"),
-      p(strong("Experiment 4-7:"), "Individual fibroblast priming experiments")
+      p(strong("Experiment 4-6:"), "Individual fibroblast priming experiments"),
+      p(strong("Experiment 7:"), "PCA + Gene expression plots")
     ),
     
     mainPanel(
@@ -191,13 +254,24 @@ server <- function(input, output) {
       cat(paste("\n🔄 [", Sys.time(), "] Starting to generate plot for:", experiment_name, "\n"))
       flush.console()
       
+      # Get gene name for FPE7 (use default if empty)
+      gene_name <- if(input$experiment == "fpe7") {
+        if(is.null(input$gene_name) || input$gene_name == "" || is.na(input$gene_name)) {
+          "DMD"  # Default gene
+        } else {
+          trimws(input$gene_name)  # Clean whitespace
+        }
+      } else {
+        NULL
+      }
+      
       # Generate the plot
       plot_result <- switch(input$experiment,
              "all" = generate_all_plot(cts, coldata),
              "fpe4" = generate_fpe4_plot(cts, coldata),
              "fpe5" = generate_fpe5_plot(cts, coldata),
              "fpe6" = generate_fpe6_plot(cts, coldata, coldata_fpe6),
-             "fpe7" = generate_fpe7_plot(cts, coldata))
+             "fpe7" = generate_fpe7_plot(cts, coldata, fpe7_dds, gene_name, genes))
       
       # Log completion of plot generation
       cat(paste("✅ [", Sys.time(), "] Finished generating plot for:", experiment_name, "\n"))

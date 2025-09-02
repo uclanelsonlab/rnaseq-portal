@@ -2,9 +2,10 @@
 # EXPERIMENT 7 (FPE7) PCA PLOT MODULE
 # ===================================================================================================
 # This module contains the plot generation function for Fibroblast Priming Experiment #7
-# Shows samples colored by participant ID and shaped by treatment, with affected samples highlighted
+# Shows PCA plot and interactive gene expression plot with user-selectable genes
+# Uses genes reference database for gene symbol to Ensembl ID mapping
 
-generate_fpe7_plot <- function(cts, coldata) {
+generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD", genes = NULL) {
   tryCatch({
     # Filter samples for FPE7 only
     selected.samples <- coldata$FPE.num == 'FPE7'
@@ -14,14 +15,34 @@ generate_fpe7_plot <- function(cts, coldata) {
       stop("No FPE7 samples found in the data")
     }
     
-    # Create DESeq2 dataset with FPE7 samples only
-    dds <- DESeqDataSetFromMatrix(
-      countData = cts[, selected.samples], 
-      colData = coldata[selected.samples, ], 
-      design = ~ treatment)
+    # Use pre-computed DESeq object if available, otherwise run analysis
+    if(!is.null(fpe7_dds)) {
+      # Use pre-computed DESeq results for much faster loading
+      cat("  Using pre-computed DESeq analysis for FPE7\n")
+      dds <- fpe7_dds
+      
+      # Apply variance stabilizing transformation for PCA
+      vsd <- vst(dds, blind = FALSE)
+    } else {
+      # Fall back to running analysis on-demand (slower)
+      cat("  Running DESeq analysis on-demand (slower - consider pre-computing)\n")
+      
+      # Create DESeq2 dataset with FPE7 samples only
+      dds <- DESeqDataSetFromMatrix(
+        countData = cts[, selected.samples], 
+        colData = coldata[selected.samples, ], 
+        design = ~ treatment)
+      
+      # Run DESeq2 analysis (needed for gene count plots)
+      dds <- DESeq(dds)
+      
+      # Apply variance stabilizing transformation for PCA
+      vsd <- vst(dds, blind = FALSE)
+    }
     
-    # Apply variance stabilizing transformation
-    vsd <- vst(dds, blind = FALSE)
+    #########################################################################################
+    ### PCA PLOT ############################################################################
+    #########################################################################################
     
     # Generate PCA data
     pcaData <- plotPCA(
@@ -29,11 +50,12 @@ generate_fpe7_plot <- function(cts, coldata) {
       intgroup = c('FPE.num', 'participant_id', 'affected_status', 'treatment', 'TNFa.positive', 'treatment.time', 'replicate.num'), 
       returnData = TRUE)
     
-    # Calculate percentage variance explained
+    # Factor treatment levels for consistent ordering
+    pcaData$treatment <- factor(x = pcaData$treatment, levels = c('none', 'iBET151', 'TNFa', 'TNFa+iBET151'))
     percentVar <- round(100 * attr(pcaData, 'percentVar'))
     
-    # Create the plot with affected samples highlighted in black
-    ggplot(data = pcaData, aes(x = PC1, y = PC2, fill = participant_id, shape = treatment, color = participant_id)) +
+    # Create PCA plot
+    pca_plot <- ggplot(data = pcaData, aes(x = PC1, y = PC2, fill = participant_id, shape = treatment, color = participant_id)) +
       geom_point(size = 3) +
       geom_point(data = pcaData[pcaData$affected_status == 'Affected', ], 
                  size = 3, 
@@ -45,18 +67,94 @@ generate_fpe7_plot <- function(cts, coldata) {
       scale_fill_brewer(palette = 'Dark2') +
       scale_color_brewer(palette = 'Dark2') +
       scale_shape_manual(values = 21:24) + 
-      ggtitle(label = 'Fibroblast Priming #7') +
+      ggtitle(label = 'PCA - Fibroblast Priming #7') +
       theme_minimal() +
       theme(
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 9),
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8),
+        plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+        legend.position = "right"
       ) +
       guides(
-        fill = guide_legend(title = "Participant ID", override.aes = list(shape = 21)),
-        color = guide_legend(title = "Participant ID", override.aes = list(shape = 21)),
+        fill = guide_legend(title = "Participant", override.aes = list(shape = 21)),
+        color = guide_legend(title = "Participant", override.aes = list(shape = 21)),
         shape = guide_legend(title = "Treatment")
       )
+    
+    #########################################################################################
+    ### GENE COUNT PLOT ####################################################################
+    #########################################################################################
+    
+    # Find gene using the specified approach
+    gene.name <- gene_name
+    cat(paste("  Searching for gene:", gene.name, "\n"))
+    
+    # Check if genes reference is available
+    if(is.null(genes)) {
+      cat("  ⚠️ Genes reference not available, using most highly expressed gene\n")
+      fpe7_counts <- cts[, selected.samples]
+      gene_means <- rowMeans(fpe7_counts)
+      selected_gene <- names(sort(gene_means, decreasing = TRUE))[1]
+      gene <- which(rownames(cts) == selected_gene)
+      display_name <- paste(gene.name, "(genes reference unavailable - showing top gene)")
+    } else {
+      # Find the gene using the genes mapping
+      gene <- which(startsWith(
+        x = rownames(cts), 
+        prefix = genes$ensembl_gene_id[genes$external_gene_name == gene.name]))
+      
+      if(length(gene) > 0) {
+        # Use the first match if multiple found
+        gene <- gene[1]  # Use first index
+        selected_gene <- rownames(cts)[gene]
+        cat(paste("  ✓ Found gene:", selected_gene, "\n"))
+        display_name <- gene.name
+      } else {
+        # Fallback: use the most highly expressed gene in FPE7
+        cat(paste("  ⚠️ Gene", gene.name, "not found in genes reference, using most highly expressed gene\n"))
+        fpe7_counts <- cts[, selected.samples]
+        gene_means <- rowMeans(fpe7_counts)
+        selected_gene <- names(sort(gene_means, decreasing = TRUE))[1]
+        gene <- which(rownames(cts) == selected_gene)
+        display_name <- paste(gene.name, "(not found - showing top gene)")
+      }
+    }
+    
+    # Generate count data for the selected gene (use gene index)
+    count_data <- plotCounts(dds, gene = gene, intgroup = 'treatment', returnData = TRUE)
+    count_data$experiment_rna_short_read_id <- rownames(count_data)
+    count_data <- merge(count_data, coldata[selected.samples, ])
+    count_data$treatment <- factor(x = count_data$treatment, levels = c('none', 'iBET151', 'TNFa', 'TNFa+iBET151'))
+    
+    # Create gene count plot
+    count_plot <- ggplot(count_data, aes(x = treatment, y = count, color = participant_id)) + 
+      geom_boxplot(outlier.shape = NA, color = 'black', alpha = 0.6) +
+      geom_point(position = position_jitter(w = 0.15, h = 0), size = 2.5) + 
+      ggtitle(label = paste("Gene Expression -", display_name)) +
+      scale_color_brewer(palette = 'Dark2') +
+      scale_y_log10(limits = c(1, NA)) +
+      theme_minimal() +
+      theme(
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 8),
+        plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right"
+      ) +
+      labs(
+        x = "Treatment",
+        y = "Normalized Count (log10)",
+        color = "Participant"
+      )
+    
+    #########################################################################################
+    ### COMBINE PLOTS #######################################################################
+    #########################################################################################
+    
+    # Combine both plots vertically
+    combined_plot <- grid.arrange(pca_plot, count_plot, ncol = 1, heights = c(1, 1))
+    
+    return(combined_plot)
     
   }, error = function(e) {
     # Return error plot if generation fails
