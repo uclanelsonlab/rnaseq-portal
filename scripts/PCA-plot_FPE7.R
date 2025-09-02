@@ -60,6 +60,7 @@ pcaData <- plotPCA(
     'treatment.time',
     'replicate.num'), 
   returnData = TRUE);
+pcaData$treatment <- factor(x = pcaData$treatment, levels = c('none', 'iBET151', 'TNFa', 'TNFa+iBET151'));
 percentVar <- round(100 * attr(pcaData, 'percentVar'));
 ggplot(
   data = pcaData, 
