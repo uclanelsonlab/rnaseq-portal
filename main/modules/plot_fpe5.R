@@ -20,6 +20,24 @@ generate_fpe5_plot <- function(cts, coldata) {
       pre <- readRDS(pca_file)
       pcaData <- pre$pcaData
       percentVar <- round(100 * pre$percentVar)
+      
+      # Apply FPE5-specific sub.treatment processing to match original script
+      # Convert treatment to character for string processing
+      treatment_char <- as.character(pcaData$treatment)
+      pcaData$sub.treatment <- substr(x = treatment_char, start = ifelse(test = startsWith(x = treatment_char, prefix = 'TNFa+'), yes = 6, no = 0), stop = 100)
+      pcaData$sub.treatment <- substr(x = pcaData$sub.treatment, start = ifelse(test = startsWith(x = pcaData$sub.treatment, prefix = 'TGFb+'), yes = 6, no = 0), stop = 100)
+      pcaData$sub.treatment[pcaData$sub.treatment == 'TNFa'] <- 'none'
+      pcaData$sub.treatment[pcaData$sub.treatment == 'TGFb'] <- 'none'
+      pcaData$sub.treatment[pcaData$sub.treatment == 'TNFa+TGFb'] <- 'none'
+      
+      # Add co.treatment and none columns
+      pcaData$TNFa.positive <- grepl(pattern = 'TNFa', x = treatment_char)
+      pcaData$TGFb.positive <- grepl(pattern = 'TGFb', x = treatment_char)
+      pcaData$co.treatment <- ifelse(
+        test = pcaData$TNFa.positive & pcaData$TGFb.positive, 
+        yes = 'TNFa+TGFb', 
+        no = ifelse(test = pcaData$TNFa.positive, yes = 'TNFa', no = ifelse(test = pcaData$TGFb.positive, yes = 'TGFb', no = 'none')))
+      pcaData$none <- grepl(pattern = 'none', x = treatment_char)
     } else {
       # Create DESeq2 dataset with FPE5 samples only
       dds <- DESeqDataSetFromMatrix(
@@ -36,6 +54,24 @@ generate_fpe5_plot <- function(cts, coldata) {
         intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num'), 
         returnData = TRUE)
       percentVar <- round(100 * attr(pcaData, 'percentVar'))
+      
+      # Apply FPE5-specific sub.treatment processing to match original script
+      # Convert treatment to character for string processing
+      treatment_char <- as.character(pcaData$treatment)
+      pcaData$sub.treatment <- substr(x = treatment_char, start = ifelse(test = startsWith(x = treatment_char, prefix = 'TNFa+'), yes = 6, no = 0), stop = 100)
+      pcaData$sub.treatment <- substr(x = pcaData$sub.treatment, start = ifelse(test = startsWith(x = pcaData$sub.treatment, prefix = 'TGFb+'), yes = 6, no = 0), stop = 100)
+      pcaData$sub.treatment[pcaData$sub.treatment == 'TNFa'] <- 'none'
+      pcaData$sub.treatment[pcaData$sub.treatment == 'TGFb'] <- 'none'
+      pcaData$sub.treatment[pcaData$sub.treatment == 'TNFa+TGFb'] <- 'none'
+      
+      # Add co.treatment and none columns
+      pcaData$TNFa.positive <- grepl(pattern = 'TNFa', x = treatment_char)
+      pcaData$TGFb.positive <- grepl(pattern = 'TGFb', x = treatment_char)
+      pcaData$co.treatment <- ifelse(
+        test = pcaData$TNFa.positive & pcaData$TGFb.positive, 
+        yes = 'TNFa+TGFb', 
+        no = ifelse(test = pcaData$TNFa.positive, yes = 'TNFa', no = ifelse(test = pcaData$TGFb.positive, yes = 'TGFb', no = 'none')))
+      pcaData$none <- grepl(pattern = 'none', x = treatment_char)
     }
     
     

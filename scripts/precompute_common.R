@@ -133,6 +133,7 @@ idx_all <- rep(TRUE, ncol(cts))
 idx_fpe4 <- coldata$FPE.num == 'FPE4'
 idx_fpe5 <- coldata$FPE.num == 'FPE5'
 idx_fpe6 <- coldata$FPE.num == 'FPE6'
+idx_fpe7 <- coldata$FPE.num == 'FPE7'
 
 # All experiments
 compute_vsd_pca(
@@ -149,7 +150,7 @@ compute_vsd_pca(
   intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num')
 )
 
-# FPE5
+# FPE5 (include columns needed for sub.treatment processing)
 compute_vsd_pca(
   expr_name = "fpe5",
   sample_idx = idx_fpe5,
@@ -162,6 +163,17 @@ compute_vsd_pca(
   sample_idx = idx_fpe6,
   intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num',
                'sub.treatment', 'TNFa.positive', 'none')
+)
+
+# FPE7 (include affected_status if present; fallback if not)
+intgroup_fpe7 <- c('FPE.num', 'participant_id', 'affected_status', 'treatment', 'TNFa.positive', 'treatment.time', 'replicate.num')
+missing_cols <- setdiff(intgroup_fpe7, colnames(coldata))
+if (length(missing_cols) > 0) intgroup_fpe7 <- setdiff(intgroup_fpe7, missing_cols)
+
+compute_vsd_pca(
+  expr_name = "fpe7",
+  sample_idx = idx_fpe7,
+  intgroup = intgroup_fpe7
 )
 
 # Build gene index map if genes reference exists
