@@ -67,7 +67,9 @@ pcaData <- plotPCA(
     'participant_id',
     'treatment',
     'treatment.time',
-    'replicate.num'), 
+    'replicate.num',
+    'sub.treatment',
+    'co.treatment'), 
   returnData = TRUE);
 percentVar <- round(100 * attr(pcaData, 'percentVar'));
 ggplot(
