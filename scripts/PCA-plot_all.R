@@ -10,7 +10,7 @@ registerDoMC(cores = 8);
 ####################################################################################################
 ### READ COUNT MATRIX ##############################################################################
 ####################################################################################################
-path <- '../data/gene-counts_FPE/';
+path <- 'data/gene-counts_FPE/';
 files <- list.files(path = path);
 .file <- paste0(path, files[1]);
 .cts <- read.table(file = .file, header = TRUE);
@@ -27,7 +27,7 @@ colnames(cts) <- sub(pattern = '.gene_id.exon.ct.short.txt', replacement = '', x
 ####################################################################################################
 ### READ COLDATA ###################################################################################
 ####################################################################################################
-coldata <- read.csv(file = '../data/metadata.csv');
+coldata <- read.csv(file = 'data/metadata.csv');
 rownames(coldata) <- coldata$experiment_rna_short_read_id;
 coldata <- coldata[ colnames(cts),];
 coldata$FPE.num <- sapply(strsplit(coldata$experiment_rna_short_read_id, "-"), `[`, 1);
