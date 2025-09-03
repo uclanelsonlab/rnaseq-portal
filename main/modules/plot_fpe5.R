@@ -75,10 +75,9 @@ generate_fpe5_plot <- function(cts, coldata) {
     }
     
     
-    # Create the plot with special highlighting for 'none' samples
+    # Create the plot
     ggplot(data = pcaData, aes(x = PC1, y = PC2, color = sub.treatment, shape = co.treatment)) +
       geom_point(size = 3) +
-      geom_point(data = pcaData[pcaData$none, ], size = 3, color = 'black') +
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
@@ -94,8 +93,8 @@ generate_fpe5_plot <- function(cts, coldata) {
         plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
       ) +
       guides(
-        color = guide_legend(title = "Sub-treatment"),
-        shape = guide_legend(title = "Co-treatment")
+        shape = guide_legend(title = "Co-treatment", order = 1),
+        color = guide_legend(title = "Sub-treatment", order = 2)
       )
     
   }, error = function(e) {

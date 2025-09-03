@@ -77,10 +77,13 @@ ggplot(
   data = pcaData, 
   aes(x = PC1, y = PC2, color = sub.treatment, shape = co.treatment)) +
   geom_point(size = 3) +
-  geom_point(data = pcaData[pcaData$none, ], size = 3, color = 'black') +
   xlab(paste0('PC1: ', percentVar[1], '% variance')) +
   ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
   coord_fixed() +
   scale_color_brewer(palette = 'Dark2') +
-  ggtitle(label = 'Fibroblast Priming #5');
+  ggtitle(label = 'Fibroblast Priming #5') +
+  guides(
+    shape = guide_legend(title = "Co-treatment", order = 1),
+    color = guide_legend(title = "Sub-treatment", order = 2)
+  );
 
