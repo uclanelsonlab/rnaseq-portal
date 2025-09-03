@@ -14,23 +14,30 @@ generate_fpe4_plot <- function(cts, coldata) {
       stop("No FPE4 samples found in the data")
     }
     
-    # Create DESeq2 dataset with FPE4 samples only
-    dds <- DESeqDataSetFromMatrix(
-      countData = cts[, selected.samples], 
-      colData = coldata[selected.samples, ], 
-      design = ~ treatment)
+    # Use precomputed PCA if available
+    pca_file <- '../data/fpe4_pca.rds'
+    if (file.exists(pca_file)) {
+      pre <- readRDS(pca_file)
+      pcaData <- pre$pcaData
+      percentVar <- round(100 * pre$percentVar)
+    } else {
+      # Create DESeq2 dataset with FPE4 samples only
+      dds <- DESeqDataSetFromMatrix(
+        countData = cts[, selected.samples], 
+        colData = coldata[selected.samples, ], 
+        design = ~ treatment)
+      
+      # Apply variance stabilizing transformation
+      vsd <- vst(dds, blind = FALSE)
+      
+      # Generate PCA data
+      pcaData <- plotPCA(
+        object = vsd, 
+        intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num'), 
+        returnData = TRUE)
+      percentVar <- round(100 * attr(pcaData, 'percentVar'))
+    }
     
-    # Apply variance stabilizing transformation
-    vsd <- vst(dds, blind = FALSE)
-    
-    # Generate PCA data
-    pcaData <- plotPCA(
-      object = vsd, 
-      intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num'), 
-      returnData = TRUE)
-    
-    # Calculate percentage variance explained
-    percentVar <- round(100 * attr(pcaData, 'percentVar'))
     
     # Create the plot
     ggplot(data = pcaData, aes(x = PC1, y = PC2, shape = treatment, color = source)) +

@@ -6,23 +6,31 @@
 
 generate_all_plot <- function(cts, coldata) {
   tryCatch({
-    # Create DESeq2 dataset with all samples
-    dds <- DESeqDataSetFromMatrix(
-      countData = cts, 
-      colData = coldata, 
-      design = ~ treatment + treatment.time)
-    
-    # Apply variance stabilizing transformation
-    vsd <- vst(dds, blind = FALSE)
-    
-    # Generate PCA data
-    pcaData <- plotPCA(
-      object = vsd, 
-      intgroup = c('FPE.num', 'participant_id', 'treatment', 'TNFa.positive', 'treatment.time', 'replicate.num'), 
-      returnData = TRUE)
-    
-    # Calculate percentage variance explained
-    percentVar <- round(100 * attr(pcaData, 'percentVar'))
+    # Try to use precomputed PCA if available
+    pca_file <- '../data/fpe_all_pca.rds'
+    if (file.exists(pca_file)) {
+      pre <- readRDS(pca_file)
+      pcaData <- pre$pcaData
+      percentVar <- round(100 * pre$percentVar)
+    } else {
+      # Create DESeq2 dataset with all samples
+      dds <- DESeqDataSetFromMatrix(
+        countData = cts, 
+        colData = coldata, 
+        design = ~ treatment + treatment.time)
+      
+      # Apply variance stabilizing transformation
+      vsd <- vst(dds, blind = FALSE)
+      
+      # Generate PCA data
+      pcaData <- plotPCA(
+        object = vsd, 
+        intgroup = c('FPE.num', 'participant_id', 'treatment', 'TNFa.positive', 'treatment.time', 'replicate.num'), 
+        returnData = TRUE)
+      
+      # Calculate percentage variance explained
+      percentVar <- round(100 * attr(pcaData, 'percentVar'))
+    }
     
     # Create the plot
     ggplot(pcaData, aes(x = PC1, y = PC2, color = FPE.num, shape = TNFa.positive)) +
