@@ -88,17 +88,10 @@ tryCatch({
   cat("  - Processing sub-treatment (step 1)...\n")
   coldata$sub.treatment <- substr(x = coldata$treatment, start = ifelse(test = startsWith(x = coldata$treatment, prefix = 'TNFa+'), yes = 6, no = 0), stop = 100)
   
-  cat("  - Processing sub-treatment (step 2)...\n")
-  coldata$sub.treatment <- substr(x = coldata$sub.treatment, start = ifelse(test = startsWith(x = coldata$sub.treatment, prefix = 'TGFb+'), yes = 6, no = 0), stop = 100)
-  
-  cat("  - Cleaning sub-treatment labels...\n")
-  coldata$sub.treatment[coldata$sub.treatment == 'TNFa'] <- 'none'
-  coldata$sub.treatment[coldata$sub.treatment == 'TGFb'] <- 'none'
-  coldata$sub.treatment[coldata$sub.treatment == 'TNFa+TGFb'] <- 'none'
-
-  # For FPE6 specific processing
+  # For FPE6 specific processing (retain TGFb-derived sub-treatments; only strip TNFa+ prefix)
   cat("  - Creating FPE6 specific coldata...\n")
   coldata_fpe6 <- coldata
+  coldata_fpe6$sub.treatment <- substr(x = coldata_fpe6$treatment, start = ifelse(test = startsWith(x = coldata_fpe6$treatment, prefix = 'TNFa+'), yes = 6, no = 0), stop = 100)
   coldata_fpe6$sub.treatment[coldata_fpe6$sub.treatment == 'none'] <- 'TNFa'
   cat("✓ Additional metadata processing complete\n")
 }, error = function(e) {

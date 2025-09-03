@@ -29,7 +29,8 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
     # Generate PCA data
     pcaData <- plotPCA(
       object = vsd, 
-      intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num'), 
+      intgroup = c('FPE.num', 'participant_id', 'treatment', 'treatment.time', 'replicate.num', 
+                   'sub.treatment', 'TNFa.positive', 'none'), 
       returnData = TRUE)
     
     # Calculate percentage variance explained
@@ -54,8 +55,8 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
         plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
       ) +
       guides(
-        color = guide_legend(title = "Sub-treatment"),
-        shape = guide_legend(title = "TNFa Positive")
+        shape = guide_legend(title = "TNFa Positive", order = 1),
+        color = guide_legend(title = "Sub-treatment", order = 2)
       )
     
   }, error = function(e) {
