@@ -186,10 +186,10 @@ ui <- fluidPage(
                   "Choose Experiment:",
                   choices = list(
                     "All Experiments" = "all",
-                    "Experiment 4" = "fpe4", 
-                    "Experiment 5" = "fpe5",
-                    "Experiment 6" = "fpe6",
-                    "Experiment 7" = "fpe7"
+                    "FPE4" = "fpe4", 
+                    "FPE5" = "fpe5",
+                    "FPE6" = "fpe6",
+                    "FPE7" = "fpe7"
                   ),
                   selected = "all"),
       
@@ -201,7 +201,7 @@ ui <- fluidPage(
               textInput("gene_name", 
                 "Gene Name:", 
                 value = "DMD",
-                placeholder = "Enter gene symbol (e.g., DMD, TTR) or Ensembl ID (e.g., ENSG00000198947)"),
+                placeholder = "Enter gene symbol (e.g., DMD, TTN) or Ensembl ID (e.g., ENSG00000198947)"),
       p(style = "font-size: 11px; color: #666;", 
         "Enter a gene symbol OR Ensembl ID to display its expression across treatments."),
       p(style = "font-size: 11px; color: #666;", 
