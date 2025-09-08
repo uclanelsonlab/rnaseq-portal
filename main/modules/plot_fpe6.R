@@ -51,7 +51,7 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
-      scale_color_brewer(palette = 'Set3') +
+      scale_color_manual(values = c('#A6CEE3', '#1F78B4', '#B2DF8A', '#33A02C', '#FB9A99', '#E31A1C', '#FDBF6F', '#FF7F00', '#CAB2D6', '#6A3D9A', '#FFFF99', '#B15928', '#8B4513')) +
       ggtitle(label = 'Fibroblast Priming #6') +
       theme_minimal() +
       theme(
