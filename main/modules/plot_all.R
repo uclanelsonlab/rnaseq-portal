@@ -38,17 +38,10 @@ generate_all_plot <- function(cts, coldata) {
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
-      scale_color_brewer(palette = 'Set1') +
-      ggtitle(label = 'All Experiments - PCA Plot') +
-      theme_minimal() +
-      theme(
-        panel.background = element_rect(fill = "gray95", color = NA),
-        panel.grid.major = element_line(color = "white", size = 0.5),
-        panel.grid.minor = element_line(color = "white", size = 0.25),
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 9),
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
-      )
+      scale_color_brewer(palette = 'Set1', name = "Experiment") +
+      scale_shape_discrete(name = "TNF?", labels = c("NO", "YES")) +
+      ggtitle(label = 'All Experiments') +
+      theme_gray(base_size = 20) 
     
   }, error = function(e) {
     # Return error plot if generation fails

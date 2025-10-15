@@ -46,16 +46,8 @@ generate_fpe4_plot <- function(cts, coldata) {
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
       scale_color_brewer(palette = 'Dark2') +
-      ggtitle(label = 'Fibroblast Priming #4') +
-      theme_minimal() +
-      theme(
-        panel.background = element_rect(fill = "gray95", color = NA),
-        panel.grid.major = element_line(color = "white", size = 0.5),
-        panel.grid.minor = element_line(color = "white", size = 0.25),
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 9),
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
-      ) +
+      ggtitle(label = 'Fibroblast Priming 4') +
+      theme_gray(base_size = 20) +
       guides(
         color = guide_legend(title = "Source"),
         shape = guide_legend(title = "Treatment")
