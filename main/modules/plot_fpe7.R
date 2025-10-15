@@ -52,7 +52,7 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
       returnData = TRUE)
     
     # Factor treatment levels for consistent ordering
-    pcaData$treatment <- factor(x = pcaData$treatment, levels = c('none', 'iBET151', 'TNFa', 'TNFa+iBET151'))
+    pcaData$treatment <- factor(x = pcaData$treatment, levels = c('none', 'TNFa', 'TNFa+iBET151', 'iBET151'))
     percentVar <- round(100 * attr(pcaData, 'percentVar'))
     
     # Create PCA plot
@@ -68,17 +68,8 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
       scale_fill_brewer(palette = 'Dark2') +
       scale_color_brewer(palette = 'Dark2') +
       scale_shape_manual(values = 21:24) + 
-      ggtitle(label = 'PCA - Fibroblast Priming #7') +
-      theme_minimal() +
-      theme(
-        panel.background = element_rect(fill = "gray95", color = NA),
-        panel.grid.major = element_line(color = "white", size = 0.5),
-        panel.grid.minor = element_line(color = "white", size = 0.25),
-        legend.title = element_text(size = 9),
-        legend.text = element_text(size = 8),
-        plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
-        legend.position = "right"
-      ) +
+      ggtitle(label = 'Fibroblast Priming 7') +
+      theme_gray(base_size = 20) +
       guides(
         fill = guide_legend(title = "Participant", override.aes = list(shape = 21)),
         color = guide_legend(title = "Participant", override.aes = list(shape = 21)),
@@ -160,22 +151,12 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
     count_plot <- ggplot(count_data, aes(x = treatment, y = count, color = participant_id)) + 
       geom_boxplot(outlier.shape = NA, color = 'black', alpha = 0.6) +
       geom_point(position = position_jitter(w = 0.15, h = 0), size = 2.5) + 
-      ggtitle(label = paste("Gene Expression -", display_name)) +
+      ggtitle(label = paste("RNA Abundance -", display_name, "(", selected_gene, ")")) +
       scale_color_brewer(palette = 'Dark2') +
       scale_y_log10(limits = c(1, NA)) +
-      theme_minimal() +
-      theme(
-        panel.background = element_rect(fill = "gray95", color = NA),
-        panel.grid.major = element_line(color = "white", size = 0.5),
-        panel.grid.minor = element_line(color = "white", size = 0.25),
-        legend.title = element_text(size = 9),
-        legend.text = element_text(size = 8),
-        plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "right"
-      ) +
+      theme_gray(base_size = 20) +
       labs(
-        x = "Treatment",
+        x = "",
         y = "Normalized Count (log10)",
         color = "Participant"
       )
