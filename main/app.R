@@ -176,22 +176,31 @@ cat("✓ All plot modules loaded successfully!\n")
 ### SHINY UI ########################################################################################
 ####################################################################################################
 ui <- fluidPage(
-  titlePanel("CCRD RNA-Seq Portal - PCA Analysis"),
+  tags$div(
+    tags$h2("Nelson Lab"),
+    tags$h4("RNA-Seq Portal", style = "margin-top: -10px; color: #666;")
+  ),
   
   sidebarLayout(
     sidebarPanel(
       width = 3,
-      h4("Plot Selection"),
-      selectInput("experiment", 
-                  "Choose Experiment:",
-                  choices = list(
-                    "All Experiments" = "all",
-                    "FPE4" = "fpe4", 
-                    "FPE5" = "fpe5",
-                    "FPE6" = "fpe6",
-                    "FPE7" = "fpe7"
-                  ),
-                  selected = "all"),
+      tags$div(
+        style = "display: flex; align-items: center; gap: 10px;",
+        tags$label("Experiment:", style = "white-space: nowrap; margin: 0;"),
+        tags$div(
+          style = "flex: 1;",
+          selectInput("experiment", 
+                      label = NULL,
+                      choices = list(
+                        "All Experiments" = "all",
+                        "Fibroblast Priming 4" = "fpe4", 
+                        "Fibroblast Priming 5" = "fpe5",
+                        "Fibroblast Priming 6" = "fpe6",
+                        "Fibroblast Priming 7" = "fpe7"
+                      ),
+                      selected = "all")
+        )
+      ),
       
       # Conditional gene input for FPE7
       conditionalPanel(
@@ -208,11 +217,7 @@ ui <- fluidPage(
         "If gene not found, the most highly expressed gene will be shown.")
       ),
       
-      hr(),
-      p("Select different experiments to view their respective PCA plots."),
-      p(strong("All Experiments:"), "Overview of all data"),
-      p(strong("Experiment 4-6:"), "Individual fibroblast priming experiments"),
-      p(strong("Experiment 7:"), "PCA + Gene expression plots")
+      hr()
     ),
     
     mainPanel(
