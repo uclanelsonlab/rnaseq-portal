@@ -74,24 +74,21 @@ generate_fpe5_plot <- function(cts, coldata) {
       pcaData$none <- grepl(pattern = 'none', x = treatment_char)
     }
     
+    # Reorder co.treatment and sub.treatment factor levels
+    pcaData$co.treatment <- factor(pcaData$co.treatment, levels = c('none', 'TNFa', 'TGFb', 'TNFa+TGFb'))
+    pcaData$sub.treatment <- factor(pcaData$sub.treatment, levels = c('none', 'KC7F2', 'rapa', 'SB'))
     
     # Create the plot
     ggplot(data = pcaData, aes(x = PC1, y = PC2, color = sub.treatment, shape = co.treatment)) +
       geom_point(size = 3) +
+      geom_point(data = subset(pcaData, co.treatment == 'none' & sub.treatment == 'none'), 
+                 size = 3, color = 'black') +
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
       scale_color_brewer(palette = 'Dark2') +
-      ggtitle(label = 'Fibroblast Priming #5') +
-      theme_minimal() +
-      theme(
-        panel.background = element_rect(fill = "gray95", color = NA),
-        panel.grid.major = element_line(color = "white", size = 0.5),
-        panel.grid.minor = element_line(color = "white", size = 0.25),
-        legend.title = element_text(size = 10),
-        legend.text = element_text(size = 9),
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
-      ) +
+      ggtitle(label = 'Fibroblast Priming 5') +
+      theme_gray(base_size = 20) +
       guides(
         shape = guide_legend(title = "Co-treatment", order = 1),
         color = guide_legend(title = "Sub-treatment", order = 2)
