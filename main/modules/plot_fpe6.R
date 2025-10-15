@@ -59,7 +59,7 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
       coord_fixed() +
       scale_shape_discrete(labels = c("NO", "YES")) +
       ggtitle(label = 'Fibroblast Priming 6') +
-      theme_gray(base_size = 20)+
+      theme_gray(base_size = 20) +
       guides(
         shape = guide_legend(title = "TNF?", order = 1),
         color = guide_legend(title = "Sub-treatment", order = 2)
