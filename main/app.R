@@ -206,15 +206,21 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.experiment == 'fpe7'",
         hr(),
-        h4("Gene Selection"),
-              textInput("gene_name", 
-                "Gene Name:", 
-                value = "DMD",
-                placeholder = "Enter gene symbol (e.g., DMD, TTN) or Ensembl ID (e.g., ENSG00000198947)"),
-      p(style = "font-size: 11px; color: #666;", 
-        "Enter a gene symbol OR Ensembl ID to display its expression across treatments."),
-      p(style = "font-size: 11px; color: #666;", 
-        "If gene not found, the most highly expressed gene will be shown.")
+        tags$div(
+          style = "display: flex; align-items: center; gap: 10px;",
+          tags$label("Gene:", style = "white-space: nowrap; margin: 0;"),
+          tags$div(
+            style = "flex: 0 1 50%; max-width: 200px;",
+            textInput("gene_name", 
+                      label = NULL,
+                      value = "DMD",
+                      placeholder = "Enter gene symbol (e.g., DMD, TTN) or Ensembl ID (e.g., ENSG00000198947)")
+          )
+        ),
+        p(style = "font-size: 11px; color: #666;", 
+          "Enter a gene symbol OR Ensembl ID")
+        # p(style = "font-size: 11px; color: #666;", 
+        #   "If gene not found, the most highly expressed gene will be shown.")
       ),
       
       hr()
@@ -222,7 +228,7 @@ ui <- fluidPage(
     
     mainPanel(
       width = 9,
-      plotOutput("pcaPlot", height = "600px")
+      plotOutput("pcaPlot", height = "1000px")
     )
   )
 )
