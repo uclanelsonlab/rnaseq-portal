@@ -86,8 +86,9 @@ generate_fpe5_plot <- function(cts, coldata) {
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
-      scale_color_brewer(palette = 'Dark2') +
-      ggtitle(label = 'Fibroblast Priming 5') +
+      scale_color_brewer(palette = 'Dark2', labels = c("None", "KC7F2", "Rapamycin", "SB")) +
+      scale_shape_discrete(labels = c("None", "TNFa", "TGFb", "TNFa+TGFb")) +
+      ggtitle(label = 'Fibroblast Priming Experiment 5') +
       theme_gray(base_size = 20) +
       guides(
         shape = guide_legend(title = "Co-treatment", order = 1),
