@@ -67,7 +67,7 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
       coord_fixed() +
       scale_fill_brewer(palette = 'Dark2') +
       scale_color_brewer(palette = 'Dark2') +
-      scale_shape_manual(values = 21:24) + 
+      scale_shape_manual(values = 21:24, labels = c("None", "TNFa", "TNFa+iBET151", "iBET151")) + 
       ggtitle(label = 'Fibroblast Priming 7') +
       theme_gray(base_size = 20) +
       guides(
@@ -145,7 +145,7 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
     count_data <- plotCounts(dds, gene = gene, intgroup = 'treatment', returnData = TRUE)
     count_data$experiment_rna_short_read_id <- rownames(count_data)
     count_data <- merge(count_data, coldata[selected.samples, ])
-    count_data$treatment <- factor(x = count_data$treatment, levels = c('none', 'iBET151', 'TNFa', 'TNFa+iBET151'))
+    count_data$treatment <- factor(x = count_data$treatment, levels = c('none', 'TNFa', 'TNFa+iBET151', 'iBET151'))
     
     # Create gene count plot
     count_plot <- ggplot(count_data, aes(x = treatment, y = count, color = participant_id)) + 
@@ -153,11 +153,12 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
       geom_point(position = position_jitter(w = 0.15, h = 0), size = 2.5) + 
       ggtitle(label = paste("RNA Abundance -", display_name, "(", selected_gene, ")")) +
       scale_color_brewer(palette = 'Dark2') +
+      scale_x_discrete(labels = c("None", "TNFa", "TNFa+iBET151", "iBET151")) +
       scale_y_log10(limits = c(1, NA)) +
       theme_gray(base_size = 20) +
       labs(
         x = "",
-        y = "Normalized Count (log10)",
+        y = "Normalized Count",
         color = "Participant"
       )
     
