@@ -193,10 +193,10 @@ ui <- fluidPage(
                       label = NULL,
                       choices = list(
                         "All Experiments" = "all",
-                        "Fibroblast Priming 4" = "fpe4", 
-                        "Fibroblast Priming 5" = "fpe5",
-                        "Fibroblast Priming 6" = "fpe6",
-                        "Fibroblast Priming 7" = "fpe7"
+                        "Fibroblast Priming Experiment 4" = "fpe4", 
+                        "Fibroblast Priming Experiment 5" = "fpe5",
+                        "Fibroblast Priming Experiment 6" = "fpe6",
+                        "Fibroblast Priming Experiment 7" = "fpe7"
                       ),
                       selected = "all")
         )
@@ -228,7 +228,7 @@ ui <- fluidPage(
     
     mainPanel(
       width = 9,
-      plotOutput("pcaPlot", height = "1000px")
+      uiOutput("plotUI")
     )
   )
 )
@@ -237,6 +237,19 @@ ui <- fluidPage(
 ### SHINY SERVER ####################################################################################
 ####################################################################################################
 server <- function(input, output) {
+  
+  # Dynamic plot UI with different heights
+  output$plotUI <- renderUI({
+    plot_height <- switch(input$experiment,
+                         "all" = "600px",
+                         "fpe4" = "600px", 
+                         "fpe5" = "600px",
+                         "fpe6" = "800px",
+                         "fpe7" = "1000px",  # FPE7 has two plots stacked
+                         "600px")  # default
+    
+    plotOutput("pcaPlot", height = plot_height)
+  })
   
   output$pcaPlot <- renderPlot({
     tryCatch({
