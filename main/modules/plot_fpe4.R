@@ -46,7 +46,8 @@ generate_fpe4_plot <- function(cts, coldata) {
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
       scale_color_brewer(palette = 'Dark2') +
-      ggtitle(label = 'Fibroblast Priming 4') +
+      scale_shape_discrete(labels = c("None", "TNFa")) +
+      ggtitle(label = 'Fibroblast Priming Experiment 4') +
       theme_gray(base_size = 20) +
       guides(
         color = guide_legend(title = "Source"),
