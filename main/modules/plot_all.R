@@ -32,14 +32,24 @@ generate_all_plot <- function(cts, coldata) {
       percentVar <- round(100 * attr(pcaData, 'percentVar'))
     }
     
+    # Reorder TNFa.positive factor levels
+    pcaData$TNFa.positive <- factor(pcaData$TNFa.positive, levels = c(TRUE, FALSE))
+    
     # Create the plot
     ggplot(pcaData, aes(x = PC1, y = PC2, color = FPE.num, shape = TNFa.positive)) +
       geom_point(size = 3) +
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
-      scale_color_brewer(palette = 'Set1', name = "Experiment") +
-      scale_shape_discrete(name = "TNF?", labels = c("NO", "YES")) +
+      scale_color_brewer(palette = 'Set1', name = "Experiment", 
+                         labels = c("Fibroblast Priming Experiment 1", 
+                                   "Fibroblast Priming Experiment 2", 
+                                   "Fibroblast Priming Experiment 3", 
+                                   "Fibroblast Priming Experiment 4", 
+                                   "Fibroblast Priming Experiment 5", 
+                                   "Fibroblast Priming Experiment 6", 
+                                   "Fibroblast Priming Experiment 7")) +
+      scale_shape_discrete(name = "TNF?", labels = c("Yes", "No")) +
       ggtitle(label = 'All Experiments') +
       theme_gray(base_size = 20) 
     
