@@ -50,6 +50,9 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
                                                'SB', 'rapa+SB', 'KC7F2', 'TGFb+KC7F2', 
                                                'EGFRi', 'EGFRi+EGF', 'EGF'))
     
+    # Reorder TNFa.positive factor levels
+    pcaData$TNFa.positive <- factor(pcaData$TNFa.positive, levels = c(TRUE, FALSE))
+    
     # Create the plot with special highlighting for 'none' samples
     ggplot(data = pcaData, aes(x = PC1, y = PC2, color = sub.treatment, shape = TNFa.positive)) +
       geom_point(size = 3) +
@@ -57,8 +60,9 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6) {
       xlab(paste0('PC1: ', percentVar[1], '% variance')) +
       ylab(paste0('PC2: ', percentVar[2], '% variance')) + 
       coord_fixed() +
-      scale_shape_discrete(labels = c("NO", "YES")) +
-      ggtitle(label = 'Fibroblast Priming 6') +
+      scale_shape_discrete(labels = c("Yes", "No")) +
+      scale_color_brewer(palette = 'Set3', labels = c("TNFa", "Rapamycin", "TGFb+Rapa", "TGFb", "TGFb+SB", "SB", "Rapa+SB", "KC7F2", "TGFb+KC7F2", "EGFRi", "EGFRi+EGF", "EGF"), na.translate = FALSE) +
+      ggtitle(label = 'Fibroblast Priming Experiment 6') +
       theme_gray(base_size = 20) +
       guides(
         shape = guide_legend(title = "TNF?", order = 1),
