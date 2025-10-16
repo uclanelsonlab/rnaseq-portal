@@ -68,7 +68,7 @@ generate_fpe7_plot <- function(cts, coldata, fpe7_dds = NULL, gene_name = "DMD",
       scale_fill_brewer(palette = 'Dark2') +
       scale_color_brewer(palette = 'Dark2') +
       scale_shape_manual(values = 21:24, labels = c("None", "TNFa", "TNFa+iBET151", "iBET151")) + 
-      ggtitle(label = 'Fibroblast Priming 7') +
+      ggtitle(label = 'Fibroblast Priming Experiment 7') +
       theme_gray(base_size = 20) +
       guides(
         fill = guide_legend(title = "Participant", override.aes = list(shape = 21)),
