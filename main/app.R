@@ -282,7 +282,7 @@ server <- function(input, output) {
                          "all" = "600px",
                          "fpe4" = "600px", 
                          "fpe5" = "600px",
-                         "fpe6" = "1000px",  # FPE6 now has two plots stacked
+                         "fpe6" = "1100px",  # FPE6 now has two plots stacked
                          "fpe7" = "1000px",  # FPE7 has two plots stacked
                          "600px")  # default
     
