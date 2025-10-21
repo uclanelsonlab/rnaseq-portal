@@ -203,10 +203,11 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6, fpe6_dds = NULL, gene
     count_data$TNFa.positive <- factor(count_data$TNFa.positive, levels = c(TRUE, FALSE))
     
     # Create gene count plot
-    count_plot <- ggplot(count_data, aes(x = sub.treatment, y = count, color = TNFa.positive)) + 
-      geom_boxplot(outlier.shape = NA, color = 'black', alpha = 0.6) +
-      geom_point(position = position_jitter(w = 0.15, h = 0), size = 2.5) + 
+    count_plot <- ggplot(count_data, aes(x = sub.treatment, y = count, fill = TNFa.positive)) + 
+      geom_boxplot(outlier.shape = NA, alpha = 0.6, position = position_dodge(width = 0.8)) +
+      geom_point(aes(color = TNFa.positive), position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8), size = 2.5) + 
       ggtitle(label = paste("RNA Abundance -", display_name, "(", selected_gene, ")")) +
+      scale_fill_manual(values = c('#f1a340', '#998ec3'), labels = c("Yes", "No")) +
       scale_color_manual(values = c('#f1a340', '#998ec3'), labels = c("Yes", "No")) +
       scale_x_discrete(labels = c("TNFa", "Rapamycin", "TGFb+Rapa", "TGFb", "TGFb+SB", "SB", "Rapa+SB", "KC7F2", "TGFb+KC7F2", "EGFRi", "EGFRi+EGF", "EGF")) +
       scale_y_log10(limits = c(1, NA)) +
@@ -214,6 +215,7 @@ generate_fpe6_plot <- function(cts, coldata, coldata_fpe6, fpe6_dds = NULL, gene
       labs(
         x = "",
         y = "Normalized Count (log10)",
+        fill = "TNF?",
         color = "TNF?"
       )
     
