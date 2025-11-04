@@ -4,6 +4,18 @@ An interactive Shiny web application for exploring PCA plots from RNA-seq analys
 
 ## 🚀 **Quick Start**
 
+### 1. Download Data
+
+The `data/` directory is required to run the app and can be downloaded from S3:
+
+```bash
+# Download and extract the data directory
+aws s3 cp s3://ucla-rare-diseases/UCLA-UDN/gcarvalho_test/rnaseq/portal/rnaseq-portal-data.zip .
+unzip rnaseq-portal-data.zip
+```
+
+### 2. Launch the App
+
 ```r
 # Navigate to the main directory
 cd /path/to/CCRD-RNAseq-portal/main/
@@ -17,10 +29,11 @@ R -e "shiny::runApp('app.R')"
 - **Interactive Plot Selection**: Switch between different experiment views with a dropdown
 - **All Experiments Overview**: Shows all samples colored by experiment number  
 - **Individual Experiments**: Dedicated visualizations for Experiments 4, 5, 6, and 7
-- **Interactive Gene Selection**: Enter custom gene names for FPE7 gene expression plots
+- **Interactive Gene Selection**: Enter custom gene names for FPE6 and FPE7 gene expression plots
 - **Modular Code Structure**: Easy customization of individual experiment plots
 - **Real-time Updates**: Plots change instantly when selections are made
 - **Intelligent Gene Search**: Automatic gene matching with fallback to most expressed genes
+- **Grouped Box Plots**: FPE6 gene counts displayed with separate box plots for TNFα+ and TNFα- samples
 
 ## 📋 **Required R Packages**
 
@@ -40,24 +53,30 @@ BiocManager::install("DESeq2")
 
 ```
 CCRD-RNAseq-portal/
-├── README.md                   # This comprehensive guide
+├── README.md                              # This comprehensive guide
 ├── data/
-│   ├── gene-counts_FPE/       # Count matrix files (231 files)
-│   └── metadata.csv           # Sample metadata
+│   ├── gene-counts_FPE/                  # Count matrix files (231 files)
+│   ├── metadata.csv                      # Sample metadata
+│   ├── fpe6_deseq_precomputed.rds        # Pre-computed FPE6 DESeq analysis
+│   └── fpe7_deseq_precomputed.rds        # Pre-computed FPE7 DESeq analysis
 ├── main/
-│   ├── app.R                  # Main Shiny application
-│   └── modules/               # Modular plot functions
-│       ├── plot_all.R         # All experiments overview
-│       ├── plot_fpe4.R        # Experiment 4 plot
-│       ├── plot_fpe5.R        # Experiment 5 plot
-│       ├── plot_fpe6.R        # Experiment 6 plot
-│       └── plot_fpe7.R        # Experiment 7 plot
-└── scripts/                   # Original individual plotting scripts
+│   ├── app.R                             # Main Shiny application
+│   └── modules/                          # Modular plot functions
+│       ├── plot_all.R                    # All experiments overview
+│       ├── plot_fpe4.R                   # Experiment 4 plot
+│       ├── plot_fpe5.R                   # Experiment 5 plot
+│       ├── plot_fpe6.R                   # Experiment 6 plot (with gene counts)
+│       └── plot_fpe7.R                   # Experiment 7 plot (with gene counts)
+└── scripts/                              # Plotting and pre-computation scripts
     ├── PCA-plot_all.R
     ├── PCA-plot_FPE4.R
     ├── PCA-plot_FPE5.R
     ├── PCA-plot_FPE6.R
-    └── PCA-plot_FPE7.R
+    ├── PCA-plot_FPE7.R
+    ├── FPE6_plot-counts_by-treatment.R   # FPE6 gene count visualization
+    ├── FPE7_plot-counts_by-treatment.R   # FPE7 gene count visualization
+    ├── precompute_fpe6_deseq.R           # Pre-compute FPE6 DESeq analysis
+    └── precompute_fpe7_deseq.R           # Pre-compute FPE7 DESeq analysis
 ```
 
 ## 🎯 **Plot Types**
@@ -67,12 +86,52 @@ CCRD-RNAseq-portal/
 | **All** | Overview of all samples | FPE number | TNFα treatment | Complete dataset view |
 | **Experiment 4** | FPE4 samples only | Source | Treatment | Focus on treatment effects |
 | **Experiment 5** | FPE5 samples only | Sub-treatment | Co-treatment | Black highlighting for 'none' |
-| **Experiment 6** | FPE6 samples only | Sub-treatment | TNFα status | Black highlighting for 'none' |  
+| **Experiment 6** | FPE6 PCA + Gene Count | Sub-treatment | TNFα status | Combined: PCA plot + Interactive gene expression with grouped box plots |  
 | **Experiment 7** | FPE7 PCA + Gene Count | Participant ID | Treatment | Combined: PCA plot + Interactive gene expression |
 
-## 🧬 **Interactive Gene Selection (Experiment 7)**
+## 🧬 **Interactive Gene Selection**
 
-Experiment 7 includes a unique **interactive gene selection** feature:
+### **Experiment 6 - Grouped Box Plots**
+
+Experiment 6 features **interactive gene selection with grouped box plots**:
+
+#### 🎯 **How to Use**
+1. Select "**Experiment 6**" from the dropdown
+2. Enter a **gene symbol** (e.g., `CXCL8`, `DMD`) **OR** an **Ensembl ID** (e.g., `ENSG00000169429`) in the **Gene Name** text box
+3. Press Enter or click elsewhere to update the plot
+4. The gene expression plot updates instantly with your selected gene
+
+#### 📊 **Visualization Features**
+- **Dual Box Plots**: Shows **two box plots per sub-treatment** - one for TNFα+ samples and one for TNFα- samples
+- **Color Coding**: Orange (#f1a340) for TNFα+ and Purple (#998ec3) for TNFα-
+- **Individual Points**: Overlaid jittered points show individual sample values
+- **Log Scale**: Y-axis uses log10 scale for better visualization of expression ranges
+- **12 Sub-treatments**: TNFa, Rapamycin, TGFb+Rapa, TGFb, TGFb+SB, SB, Rapa+SB, KC7F2, TGFb+KC7F2, EGFRi, EGFRi+EGF, EGF
+
+#### 🔍 **Gene Search Method**
+The app supports **both gene symbols and Ensembl IDs** using a comprehensive genes reference database:
+
+- **Gene Symbols**: Direct lookup using `genes$external_gene_name` to find corresponding Ensembl ID
+- **Ensembl IDs**: Automatically detected (starting with "ENSG"), mapped to gene symbol
+- **Fallback Strategy**: If gene not found, shows the most highly expressed gene with a warning
+
+#### ✨ **Examples**
+
+**Gene Symbols** (inflammation and fibrosis markers):
+- **`CXCL8`**: Interleukin-8 (default) - inflammatory chemokine
+- **`IL6`**: Interleukin-6 - pro-inflammatory cytokine
+- **`COL1A1`**: Collagen Type I Alpha 1 - fibrosis marker
+- **`ACTA2`**: Alpha-smooth muscle actin - myofibroblast marker
+- **`TGFB1`**: Transforming growth factor beta 1
+
+**Ensembl IDs**:
+- **`ENSG00000169429`**: CXCL8 (Interleukin-8)
+- **`ENSG00000136244`**: IL6 (Interleukin-6)
+- **`ENSG00000108821`**: COL1A1 (Collagen Type I Alpha 1)
+
+### **Experiment 7 - Time Series**
+
+Experiment 7 includes **interactive gene selection with time series analysis**:
 
 ### 🎯 **How to Use**
 1. Select "**Experiment 7**" from the dropdown
@@ -253,6 +312,17 @@ print(plot)
 
 ## 📊 **Data Requirements**
 
+### Downloading the Data
+
+The complete `data/` directory is available from S3:
+
+```bash
+aws s3 cp s3://ucla-rare-diseases/UCLA-UDN/gcarvalho_test/rnaseq/portal/rnaseq-portal-data.zip .
+unzip rnaseq-portal-data.zip
+```
+
+This archive includes all necessary files: count matrices, metadata, pre-computed DESeq analyses, and gene reference databases.
+
 ### Count Files (`data/gene-counts_FPE/`)
 - Format: Tab-separated text files
 - Columns: `gene_id` and count values
@@ -289,17 +359,18 @@ ggsave("experiment4_plot.png", plot, width = 8, height = 6, dpi = 300)
 
 - **Data Loading**: Count matrix (62,757 genes × 231 samples) loads once at startup
 - **Plot Generation**: PCA calculations performed on-demand when switching experiments  
-- **FPE7 Optimization**: Pre-computed DESeq analysis loaded at startup for instant plot generation
+- **FPE6 & FPE7 Optimization**: Pre-computed DESeq analysis loaded at startup for instant plot generation
 - **Memory Usage**: ~250MB RAM for typical dataset size (includes pre-computed results)
-- **Load Time**: ~30-60 seconds initial startup, <2 seconds plot switching (FPE7 now instant!)
+- **Load Time**: ~30-60 seconds initial startup, <2 seconds plot switching (FPE6 & FPE7 now instant!)
 
-### 🚀 **FPE7 Speed Optimization**
+### 🚀 **Speed Optimization (FPE6 & FPE7)**
 
-Experiment 7 uses pre-computed DESeq2 results for lightning-fast plot generation:
+Experiments 6 and 7 use pre-computed DESeq2 results for lightning-fast plot generation:
 
-- **Pre-computed**: DESeq analysis runs once offline (~4 minutes) 
+- **Pre-computed**: DESeq analysis runs once offline (~4 minutes per experiment) 
 - **Runtime**: Plot generation now takes <2 seconds instead of 3-4 minutes
 - **Auto-loading**: Pre-computed results loaded automatically at app startup
+- **Grouped Visualization**: FPE6 displays dual box plots (TNFα+ vs TNFα-) for each sub-treatment
 
 ### 🔄 **Regenerating Pre-computed Results**
 
@@ -309,14 +380,17 @@ If you update your data, regenerate the pre-computed DESeq analysis:
 # Navigate to scripts directory
 cd scripts/
 
-# Run pre-computation (takes ~4 minutes)
+# Run pre-computation for FPE6 (takes ~4 minutes)
+Rscript precompute_fpe6_deseq.R
+
+# Run pre-computation for FPE7 (takes ~4 minutes)
 Rscript precompute_fpe7_deseq.R
 
 # Restart your Shiny app to use new results
 ```
 
 **When to regenerate:**
-- After adding/removing FPE7 samples
+- After adding/removing FPE6 or FPE7 samples
 - After updating count data or metadata
 - When changing DESeq2 analysis parameters
 
