@@ -128,6 +128,35 @@ tryCatch({
   fpe7_dds <- NULL
 })
 
+# Load pre-computed FPE6 DESeq object for faster plot generation
+tryCatch({
+  cat("Loading pre-computed FPE6 DESeq analysis...\n")
+  fpe6_deseq_file <- '../data/fpe6_deseq_precomputed.rds'
+  
+  if(file.exists(fpe6_deseq_file)) {
+    fpe6_dds <- readRDS(fpe6_deseq_file)
+    
+    # Load analysis info
+    info_file <- '../data/fpe6_deseq_info.rds'
+    if(file.exists(info_file)) {
+      fpe6_info <- readRDS(info_file)
+      cat(paste("✓ Pre-computed FPE6 DESeq loaded (", fpe6_info$sample_count, "samples,", 
+                fpe6_info$gene_count, "genes)\n"))
+      cat(paste("  Analysis created:", fpe6_info$creation_date, "\n"))
+    } else {
+      cat("✓ Pre-computed FPE6 DESeq loaded\n")
+    }
+  } else {
+    cat("⚠️  Pre-computed FPE6 DESeq not found - will run analysis on-demand (slower)\n")
+    cat("   Run 'Rscript ../scripts/precompute_fpe6_deseq.R' to generate it\n")
+    fpe6_dds <- NULL
+  }
+}, error = function(e) {
+  cat(paste("⚠️  Error loading pre-computed FPE6 DESeq:", e$message, "\n"))
+  cat("   Will fall back to on-demand analysis (slower)\n")
+  fpe6_dds <- NULL
+})
+
 # Load genes reference data for FPE7 gene mapping
 tryCatch({
   cat("Loading genes reference data...\n")
@@ -202,9 +231,9 @@ ui <- fluidPage(
         )
       ),
       
-      # Conditional gene input for FPE7
+      # Conditional gene input for FPE6 and FPE7
       conditionalPanel(
-        condition = "input.experiment == 'fpe7'",
+        condition = "input.experiment == 'fpe6' || input.experiment == 'fpe7'",
         hr(),
         tags$div(
           style = "display: flex; align-items: center; gap: 10px;",
@@ -218,7 +247,16 @@ ui <- fluidPage(
           )
         ),
         p(style = "font-size: 11px; color: #666;", 
-          "Enter a gene symbol OR Ensembl ID")
+          "Enter a gene symbol OR Ensembl ID"),
+        tags$script("
+          $(document).ready(function() {
+            $('#experiment').on('change', function() {
+              var experiment = $(this).val();
+              var defaultValue = experiment === 'fpe6' ? 'DMD' : 'DMD';
+              $('#gene_name').val(defaultValue);
+            });
+          });
+        ")
         # p(style = "font-size: 11px; color: #666;", 
         #   "If gene not found, the most highly expressed gene will be shown.")
       ),
@@ -244,7 +282,7 @@ server <- function(input, output) {
                          "all" = "600px",
                          "fpe4" = "600px", 
                          "fpe5" = "600px",
-                         "fpe6" = "800px",
+                         "fpe6" = "1100px",  # FPE6 now has two plots stacked
                          "fpe7" = "1000px",  # FPE7 has two plots stacked
                          "600px")  # default
     
@@ -271,8 +309,8 @@ server <- function(input, output) {
       cat(paste("\n🔄 [", Sys.time(), "] Starting to generate plot for:", experiment_name, "\n"))
       flush.console()
       
-      # Get gene name for FPE7 (use default if empty)
-      gene_name <- if(input$experiment == "fpe7") {
+      # Get gene name for FPE6 and FPE7 (use default if empty)
+      gene_name <- if(input$experiment == "fpe6" || input$experiment == "fpe7") {
         if(is.null(input$gene_name) || input$gene_name == "" || is.na(input$gene_name)) {
           "DMD"  # Default gene
         } else {
@@ -287,7 +325,7 @@ server <- function(input, output) {
              "all" = generate_all_plot(cts, coldata),
              "fpe4" = generate_fpe4_plot(cts, coldata),
              "fpe5" = generate_fpe5_plot(cts, coldata),
-             "fpe6" = generate_fpe6_plot(cts, coldata, coldata_fpe6),
+             "fpe6" = generate_fpe6_plot(cts, coldata, coldata_fpe6, fpe6_dds, gene_name, genes),
              "fpe7" = generate_fpe7_plot(cts, coldata, fpe7_dds, gene_name, genes))
       
       # Log completion of plot generation
