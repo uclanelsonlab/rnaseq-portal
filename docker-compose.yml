@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  rnaseq-portal:
+    build: .
+    container_name: rnaseq-portal
+    ports:
+      - "3838:3838"
+    volumes:
+      # Mount the data directory
+      - ./data:/app/data:ro
+    environment:
+      - SHINY_LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3838"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
