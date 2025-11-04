@@ -4,23 +4,44 @@ An interactive Shiny web application for exploring PCA plots from RNA-seq analys
 
 ## 🚀 **Quick Start**
 
-### 1. Download Data
+### Option 1: Docker (Recommended)
 
-The `data/` directory is required to run the app and can be downloaded from S3:
+The easiest way to run the app is using Docker:
 
 ```bash
-# Download and extract the data directory
+# 1. Download and extract the data directory
 aws s3 cp s3://ucla-rare-diseases/UCLA-UDN/gcarvalho_test/rnaseq/portal/rnaseq-portal-data.zip .
 unzip rnaseq-portal-data.zip
+
+# 2. Build and run with Docker Compose
+docker-compose up -d
+
+# 3. Access the app at http://localhost:3838
 ```
 
-### 2. Launch the App
+Or using Docker directly:
 
-```r
-# Navigate to the main directory
+```bash
+# Build the image
+docker build -t rnaseq-portal .
+
+# Run the container
+docker run -d -p 3838:3838 -v $(pwd)/data:/app/data:ro --name rnaseq-portal rnaseq-portal
+
+# Access the app at http://localhost:3838
+```
+
+### Option 2: Local R Installation
+
+```bash
+# 1. Download and extract the data directory
+aws s3 cp s3://ucla-rare-diseases/UCLA-UDN/gcarvalho_test/rnaseq/portal/rnaseq-portal-data.zip .
+unzip rnaseq-portal-data.zip
+
+# 2. Navigate to the main directory
 cd /path/to/CCRD-RNAseq-portal/main/
 
-# Launch the Shiny app
+# 3. Launch the Shiny app
 R -e "shiny::runApp('app.R')"
 ```
 
@@ -54,7 +75,11 @@ BiocManager::install("DESeq2")
 ```
 CCRD-RNAseq-portal/
 ├── README.md                              # This comprehensive guide
-├── data/
+├── DOCKER.md                              # Docker deployment guide
+├── Dockerfile                             # Docker image definition
+├── docker-compose.yml                     # Docker Compose configuration
+├── .dockerignore                          # Docker build exclusions
+├── data/                                  # Data directory (download from S3)
 │   ├── gene-counts_FPE/                  # Count matrix files (231 files)
 │   ├── metadata.csv                      # Sample metadata
 │   ├── fpe6_deseq_precomputed.rds        # Pre-computed FPE6 DESeq analysis
@@ -228,6 +253,78 @@ scale_color_brewer(palette = 'Spectral')  # Rainbow colors
 ✅ **Clean Code**: Each function is self-contained and well-documented  
 ✅ **Easy Testing**: Test individual modules independently  
 
+## 🐳 **Docker Deployment**
+
+For detailed Docker documentation, troubleshooting, and production deployment guide, see **[DOCKER.md](DOCKER.md)**.
+
+### Building the Image
+
+```bash
+# Build with docker-compose
+docker-compose build
+
+# Or build directly
+docker build -t rnaseq-portal .
+```
+
+### Running the Container
+
+```bash
+# Start with docker-compose (recommended)
+docker-compose up -d
+
+# Or run directly
+docker run -d -p 3838:3838 -v $(pwd)/data:/app/data:ro --name rnaseq-portal rnaseq-portal
+```
+
+### Managing the Container
+
+```bash
+# View logs
+docker-compose logs -f
+# Or: docker logs -f rnaseq-portal
+
+# Stop the container
+docker-compose down
+# Or: docker stop rnaseq-portal
+
+# Restart the container
+docker-compose restart
+# Or: docker restart rnaseq-portal
+
+# Remove the container
+docker-compose down -v
+# Or: docker rm -f rnaseq-portal
+```
+
+### Accessing the App
+
+Once running, access the app at: **http://localhost:3838**
+
+### Docker Image Details
+
+- **Base Image**: `rocker/r-ver:4.3`
+- **Installed Packages**: shiny, ggplot2, foreach, doMC, gridExtra, DESeq2
+- **Port**: 3838
+- **Data Volume**: Mounted at `/app/data` (read-only)
+- **Health Check**: Enabled with 30s interval
+
+### Updating Data
+
+To update the data without rebuilding:
+
+```bash
+# Stop the container
+docker-compose down
+
+# Update your data directory
+aws s3 cp s3://ucla-rare-diseases/UCLA-UDN/gcarvalho_test/rnaseq/portal/rnaseq-portal-data.zip .
+unzip -o rnaseq-portal-data.zip
+
+# Restart the container
+docker-compose up -d
+```
+
 ## 🔧 **Development**
 
 ### Adding a New Experiment
@@ -289,23 +386,45 @@ print(plot)
 
 ## 🔍 **Troubleshooting**
 
-### App Won't Start
+### Docker Issues
+
+#### Container Won't Start
+- ✅ Check Docker is running: `docker ps`
+- ✅ Verify data directory exists and is in the right location
+- ✅ Check logs: `docker-compose logs` or `docker logs rnaseq-portal`
+- ✅ Ensure port 3838 is not already in use: `lsof -i :3838` (macOS/Linux)
+
+#### Can't Access the App
+- ✅ Verify container is running: `docker ps`
+- ✅ Check health status: `docker inspect rnaseq-portal | grep -A 5 Health`
+- ✅ Confirm port mapping: should see `0.0.0.0:3838->3838/tcp`
+- ✅ Try accessing: http://localhost:3838
+
+#### Data Not Loading
+- ✅ Verify data volume is mounted: `docker inspect rnaseq-portal | grep -A 10 Mounts`
+- ✅ Check data directory contains expected files
+- ✅ Ensure data was downloaded and extracted correctly
+- ✅ Verify file permissions (data should be readable)
+
+### Local R Installation Issues
+
+#### App Won't Start
 - ✅ Check all R packages are installed (`DESeq2`, `shiny`, `ggplot2`, etc.)
 - ✅ Verify data files exist: `../data/metadata.csv` and `../data/gene-counts_FPE/`
 - ✅ Ensure you're in the `main/` directory when running the app
 - ✅ Check R console for specific error messages
 
-### Plots Not Displaying
+#### Plots Not Displaying
 - ✅ Look for error messages in R console
 - ✅ Verify the experiment has samples (check FPE numbers in metadata)
 - ✅ Test individual modules with `source("modules/plot_name.R")`
 
-### Module Errors
+#### Module Errors
 - ✅ Check function syntax (missing commas, unmatched parentheses)
 - ✅ Ensure required data columns exist in your metadata
 - ✅ Verify all `aes()` mappings reference valid column names
 
-### Data Loading Issues
+#### Data Loading Issues
 - ✅ Confirm file paths are correct (`../data/` relative to `main/` directory)
 - ✅ Check file permissions and readability
 - ✅ Verify count files are in expected format
