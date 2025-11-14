@@ -59,6 +59,12 @@ Simplifies container management with:
 
 ## Common Commands
 
+### Create certs
+```bash
+mkdir certs/; cd certs
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt
+```
+
 ### Building
 
 ```bash
