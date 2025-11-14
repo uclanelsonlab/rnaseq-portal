@@ -1,21 +1,40 @@
-version: '3.8'
-
 services:
   rnaseq-portal:
     build: .
     container_name: rnaseq-portal
-    ports:
-      - "3838:3838"
+    # ------------------------------------------------------------------
+    # Nginx will access port 3838 over the private Docker network.
+    # We do not want to expose the app directly to the host machine.
+    # ------------------------------------------------------------------
     volumes:
-      # Mount the data directory
       - ./data:/app/data:ro
     environment:
       - SHINY_LOG_LEVEL=INFO
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3838"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    networks: # Added to network containers
+      - app-network
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "443:443"
+    volumes:
+      # This path is correct
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+      # This means your nginx.conf file MUST use paths
+      # like /etc/nginx/ssl/server.crt
+      - ./certs:/etc/nginx/ssl:ro
+    depends_on:
+      - rnaseq-portal
+    restart: unless-stopped
+    networks: # Added to network containers
+      - app-network
+
+# ------------------------------------------------------------------
+# Define the custom network so containers can talk to each other by name.
+# ------------------------------------------------------------------
+networks:
+  app-network:
+    driver: bridge
